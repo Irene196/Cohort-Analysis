@@ -1,7 +1,5 @@
 
 
-setwd("~/Data Science/Desarrollo Personal/Cohort Visualization")
-
 rm(list=ls())
 library(lubridate)
 library(reshape)
