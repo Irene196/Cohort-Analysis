@@ -1,12 +1,13 @@
 
 
+setwd("~/Data Science/Desarrollo Personal/Cohort Visualization")
+
 rm(list=ls())
 library(lubridate)
 library(reshape)
 library(data.table)
 
 # leemos el fichero que sale de SAS
-
 bajas <- read.table("Bajas.csv", header=T, sep=';')
 
 colnames(bajas) <- c('cohort', 'value', 'month')
@@ -27,24 +28,19 @@ for (i in -2:maximo){
 }
 
 #reducir el dataset para que los dummies no añadan
-
 bajas.table <- data.table(bajas)
 bajas.table <- bajas.table[,sum(value),by="cohort,month"]
 
 #ordenar por cohort - aunque creo que da igual
-
 setkey(bajas.table,cohort)
 
 #trasponer 
-
 new_bajas <- cast(bajas.table, cohort~month, value="V1")
 
 # rellenar de zeros los dummies
-
 new_bajas[is.na(new_bajas)]<-0
 
 # hacerlo incremental
-
 for (i in 4:(maximo+4)){
   new_bajas[,i] <- new_bajas[,i]+ new_bajas[,(i-1)] 
 }
@@ -55,5 +51,15 @@ y <- new_bajas[,2]
 reten.r <- apply(x, 2, function(x) 1-(x/y) )
 reten.r <- data.frame(cohort=(new_bajas$cohort), reten.r)
 reten.r <- reten.r[,-2]
+
+#hacer zeros aquellas columnas que no tiene sentido tengan numero
+totcols <- ncol(reten.r) #count number of columns in data set
+for (i in 9:nrow(reten.r)) { #for loop for shifting each row
+  df <- reten.r[i,] #select row from data frame
+  df[,c((totcols-i+9):totcols)] <- 0
+  reten.r[i,] <- df #replace initial row by new one
+}
+
+# ya tengo el triangulo, ahora el objetivo es compararlo con lo esperado
 
 
